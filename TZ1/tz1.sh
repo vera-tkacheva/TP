@@ -1,27 +1,47 @@
 #!/bin/bash
 
+# Получаем на вход 2 директории
 input_dir="$1"
 output_dir="$2"
+
+# Предоставляем права на чтение и выполнение для входной директории и ее содержимого
+chmod -R +xr "$input_dir"
+
 files_in_input_dir=()
+subdirs=()
 
+# Перебираем содержимое входной директории, получаем список файлов во входной директории и список поддиректорий
 for file in "$input_dir"/*; do
-    if [ -f "$file" ]; then
+    # Если файл, то добавляем в массив файлов
+    if [[ -f "$file" ]]; then 
         files_in_input_dir+=("$file")
+    # Если директория, то добавляем в массив поддиректорий
+    elif [[ -d "$file" ]]; then
+        subdirs+=("$file")
     fi
 done
 
-while IFS= read -r -d '' file; do
-    files_in_input_dir+=("$file")
-done < <(find "$input_dir" -mindepth 1 -type f -print0)
+# Добавляем в соответствующий массив файлы из каждой поддиректории
+for subdir in "${subdirs[@]}"; do
+    for file in "$subdir"/*; do
+        # Если файл, то добавляем в массив файлов
+        if [[ -f "$file" ]]; then
+            files_in_input_dir+=("$file")
+        fi
+    done
+done
 
+# Копируем файлы из массива в выходную директорию
 for file in "${files_in_input_dir[@]}"; do
-    file_name=$(basename "$file")
+    real_path=$(realpath "$file")
+    file_name=$(basename "$real_path")
+    # Если файл с таким именем уже есть в выходной директории, добавляем к имени хэш-код
     if [ -e "$output_dir/$file_name" ]; then
-        hash_code=$(md5 "$file" | cut -d ' ' -f 1)
+        hash_code=$(md5 "$real_path" | cut -d ' ' -f 1)
         new_file_name="${file_name%.*}_$hash_code.${file_name##*.}"
-        cp "$file" "$output_dir/$new_file_name"
+        cp "$real_path" "$output_dir/$new_file_name"
+    # Если файла с таким именем нет, то оставляем как есть
     else
-        cp "$file" "$output_dir/$file_name"
+        cp "$real_path" "$output_dir/$file_name"
     fi
 done
-
