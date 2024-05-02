@@ -35,7 +35,7 @@ done
 for file in "${files_in_input_dir[@]}"; do
     real_path=$(realpath "$file")
     file_name=$(basename "$real_path")
-    # Если файл с таким именем уже есть в выходной директории, добавляем к имени хэш-код
+    # Если файл с таким именем уже есть в выходной директории, то добавляем к имени хэш-код
     if [ -e "$output_dir/$file_name" ]; then
         hash_code=$(md5 "$real_path" | cut -d ' ' -f 1)
         new_file_name="${file_name%.*}_$hash_code.${file_name##*.}"
