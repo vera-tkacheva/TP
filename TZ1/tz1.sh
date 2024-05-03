@@ -12,9 +12,11 @@ output_dir="$2"
 # Предоставляем права на чтение и выполнение для входной директории и ее содержимого
 chmod -R +xr "$input_dir"
 
-
 files_in_input_dir=()
 subdirs=()
+
+# Включаем в обработку скрытые файлы
+shopt -s dotglob
 
 # Перебираем содержимое входной директории, получаем список файлов во входной директории и список поддиректорий
 for file in "$input_dir"/*; do
@@ -41,14 +43,12 @@ for file in "${files_in_input_dir[@]}"; do
     file_name=$(basename -- "$file")
     end_file_path="$output_dir/$file_name"
     counter=1
-    # Пока существует файл с таким именем в выходной директории, увеличиваем счетчик; добавляем его к названию
+    # Пока существует файл с таким именем в выходной директории, увеличиваем счетчик
     while [ -e "$end_file_path" ]; do
         name="${file_name%.*}"
         extension="${file_name##*.}"
-        # Если файл содежит точку (у него есть расширение), то к имени добавляем счетчик и расширение
         if [[ "$file_name" == *.* ]]; then
             end_file_path="$output_dir/${name}_$counter.$extension"
-        # Если расширения нет, то к имени добавляем только счетчик
         else
             end_file_path="$output_dir/${name}_$counter"
         fi
